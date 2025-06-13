@@ -3,10 +3,8 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-black text-yellow-400">
-      {/* Content Section */}
+    <main className="flex min-h-screen items-center bg-black text-yellow-400">
       <div className="container mx-auto px-4 py-12">
-        {/* Greeting Message */}
         <div className="mx-auto mb-12 max-w-3xl text-center">
           <h2 className="font-orbitron mb-4 text-3xl font-bold md:text-4xl">
             Welcome to a Galaxy Far, Far Away
