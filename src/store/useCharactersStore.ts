@@ -38,23 +38,15 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
   },
 
   fetchCharacters: async (page = 1, searchFilter?: string) => {
+    console.log("fetchCharacters", page, searchFilter);
     const state = get();
-    // Don't fetch if we're already loading
+
     if (state.loading) return;
 
-    // Only check cache if we're not filtering and on page 1
-    if (
-      state.characters.length > 0 &&
-      state.currentPage === page &&
-      !searchFilter &&
-      page === 1
-    ) {
-      return;
-    }
+    const filter = searchFilter ?? state.filter;
 
     try {
       set({ loading: true, error: null });
-      const filter = searchFilter ?? state.filter;
 
       let charactersWithDetails;
       let totalPages;
@@ -63,15 +55,9 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
       let previous;
 
       if (filter) {
-        const response = await api.get<{
-          result: Array<{
-            properties: CharacterProperties;
-            uid: string;
-            _id: string;
-            description: string;
-            __v: number;
-          }>;
-        }>(`/people?page=${page}&limit=6&name=${filter}`);
+        const response = await api.get<{ result: any[] }>(
+          `/people?page=${page}&limit=6&name=${filter}`,
+        );
 
         charactersWithDetails = response.data.result.map((character) => ({
           uid: character.uid,
@@ -80,13 +66,11 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
           properties: character.properties,
         }));
 
-        // For filtered results, we don't have pagination info
         totalPages = 1;
         totalRecords = charactersWithDetails.length;
         next = null;
         previous = null;
       } else {
-        // No search filter
         const response = await api.get<CharactersResponse>(
           `/people?page=${page}&limit=6`,
         );
@@ -99,7 +83,6 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
           previous: prevPage,
         } = response.data;
 
-        // Fetch details for each character
         charactersWithDetails = await Promise.all(
           results.map(async (character) => {
             try {
@@ -128,7 +111,7 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
 
       set({
         characters: charactersWithDetails,
-        currentPage: page,
+        currentPage: page, // ✅ Always update this
         totalPages,
         totalRecords,
         hasNextPage: !!next,

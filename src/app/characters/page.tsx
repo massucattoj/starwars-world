@@ -25,6 +25,7 @@ export default function CharactersPage() {
 
   // Debounced filter handler
   const handleFilterChange = useCallback((value: string) => {
+    console.log(value);
     setSearchTerm(value);
   }, []);
 
@@ -35,8 +36,9 @@ export default function CharactersPage() {
         setFilter(searchTerm);
         fetchCharacters(1, searchTerm);
       } else if (searchTerm === "") {
+        // 👇 Reset the filter in the store BEFORE fetching
         setFilter("");
-        fetchCharacters(1);
+        fetchCharacters(1, ""); // <-- Explicitly pass empty string
       }
     }, 500);
 
