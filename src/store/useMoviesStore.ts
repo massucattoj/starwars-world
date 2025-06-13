@@ -14,6 +14,10 @@ export const useMoviesStore = create<FilmsState>((set) => ({
   loading: false,
   error: null,
   fetchFilms: async () => {
+    // Check if movies already exist
+    const state = useMoviesStore.getState();
+    if (state.films.length > 0) return;
+
     try {
       set({ loading: true, error: null });
       const response = await api.get("/films");

@@ -1,18 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useMoviesStore } from "@/store/useMoviesStore";
-import MovieCard from "./components/movie-card";
-import MovieCardSkeleton from "./components/movie-card-skeleton";
+import MovieCard from "./components/MovieCard";
+import MovieCardSkeleton from "./components/LoadingMoviewSkeleton";
 
 export default function MoviesPage() {
   const { films, loading, error, fetchFilms } = useMoviesStore();
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    fetchFilms();
-  }, [fetchFilms]);
+    if (films.length === 0) {
+      fetchFilms();
+    }
+  }, []);
 
   const handleImageError = (filmId: string) => {
     setImageErrors((prev) => ({ ...prev, [filmId]: true }));

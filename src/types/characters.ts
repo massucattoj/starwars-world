@@ -21,6 +21,7 @@ export interface Character {
   uid: string;
   name: string;
   url: string;
+  properties?: CharacterProperties;
 }
 
 export interface CharactersResponse {

@@ -17,7 +17,7 @@ interface CharactersState {
   hasPreviousPage: boolean;
   filter: string;
   setFilter: (filter: string) => void;
-  fetchCharacters: (page?: number) => Promise<void>;
+  fetchCharacters: (page?: number, searchFilter?: string) => Promise<void>;
   nextPage: () => void;
   previousPage: () => void;
 }
@@ -34,14 +34,27 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
   filter: "",
 
   setFilter: (filter: string) => {
-    set({ filter, currentPage: 1 });
-    get().fetchCharacters(1);
+    set({ filter });
   },
 
-  fetchCharacters: async (page = 1) => {
+  fetchCharacters: async (page = 1, searchFilter?: string) => {
+    const state = get();
+    // Don't fetch if we're already loading
+    if (state.loading) return;
+
+    // Only check cache if we're not filtering and on page 1
+    if (
+      state.characters.length > 0 &&
+      state.currentPage === page &&
+      !searchFilter &&
+      page === 1
+    ) {
+      return;
+    }
+
     try {
       set({ loading: true, error: null });
-      const { filter } = get();
+      const filter = searchFilter ?? state.filter;
 
       let charactersWithDetails;
       let totalPages;
@@ -132,16 +145,16 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
   },
 
   nextPage: () => {
-    const { currentPage, totalPages } = get();
+    const { currentPage, totalPages, filter } = get();
     if (currentPage < totalPages) {
-      get().fetchCharacters(currentPage + 1);
+      get().fetchCharacters(currentPage + 1, filter);
     }
   },
 
   previousPage: () => {
-    const { currentPage } = get();
+    const { currentPage, filter } = get();
     if (currentPage > 1) {
-      get().fetchCharacters(currentPage - 1);
+      get().fetchCharacters(currentPage - 1, filter);
     }
   },
 }));
