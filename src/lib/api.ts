@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const BASE_URL = "https://www.swapi.tech/api";
-const OMDB_API_KEY = "9500496d";
-const OMDB_BASE_URL = "https://www.omdbapi.com";
+const BASE_URL = process.env.NEXT_PUBLIC_SWAPI_BASE_URL;
+const OMDB_BASE_URL = process.env.NEXT_PUBLIC_OMDB_BASE_URL;
+const OMDB_API_KEY = process.env.NEXT_PUBLIC_OMDB_API_KEY;
 
 export const api = axios.create({
   baseURL: BASE_URL,
