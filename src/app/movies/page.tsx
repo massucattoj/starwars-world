@@ -6,24 +6,40 @@ import MovieCard from "./components/MovieCard";
 import MovieCardSkeleton from "./components/LoadingMoviewSkeleton";
 
 export default function MoviesPage() {
-  const { films, loading, error, fetchFilms } = useMoviesStore();
+  const { films, loading, error, fetchFilms, hasAttemptedFetch, clearError } =
+    useMoviesStore();
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (films.length === 0) {
+    if (films.length === 0 && !loading && !hasAttemptedFetch) {
       fetchFilms();
     }
-  }, []);
+  }, [films.length, loading, hasAttemptedFetch]);
 
   const handleImageError = (filmId: string) => {
     setImageErrors((prev) => ({ ...prev, [filmId]: true }));
   };
 
+  const handleRetry = () => {
+    clearError();
+    fetchFilms();
+  };
+
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-yellow-400">
-        <div className="font-orbitron text-2xl text-red-500">
-          Error: {error}
+        <div className="text-center">
+          <div className="font-orbitron mb-4 text-2xl text-red-500">
+            Something went wrong
+          </div>
+          <p className="mb-4 text-gray-300">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="rounded bg-yellow-400 px-4 py-2 font-semibold text-black transition-colors hover:bg-yellow-300"
+            disabled={loading}
+          >
+            {loading ? "Retrying..." : "Try Again"}
+          </button>
         </div>
       </div>
     );

@@ -16,41 +16,54 @@ export default function CharactersPage() {
     currentPage,
     totalPages,
     filter,
+    hasAttemptedFetch,
     setFilter,
     nextPage,
     previousPage,
+    clearError,
   } = useCharactersStore();
 
   const [searchTerm, setSearchTerm] = useState(filter);
 
   // Debounced filter handler
   const handleFilterChange = useCallback((value: string) => {
-    console.log(value);
     setSearchTerm(value);
   }, []);
 
-  // Effect to handle filter changes
   useEffect(() => {
+    // Initial load - only if we haven't attempted and no characters
+    if (
+      characters.length === 0 &&
+      !filter &&
+      !searchTerm &&
+      !hasAttemptedFetch &&
+      !loading
+    ) {
+      fetchCharacters(1);
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       if (searchTerm.length >= 2) {
         setFilter(searchTerm);
         fetchCharacters(1, searchTerm);
-      } else if (searchTerm === "") {
-        // 👇 Reset the filter in the store BEFORE fetching
+      } else if (searchTerm === "" && filter !== "") {
         setFilter("");
-        fetchCharacters(1, ""); // <-- Explicitly pass empty string
+        fetchCharacters(1, "");
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, setFilter, fetchCharacters]);
+  }, [searchTerm, filter, characters.length, hasAttemptedFetch, loading]);
 
-  // Initial fetch
-  useEffect(() => {
-    if (characters.length === 0) {
-      fetchCharacters(currentPage);
+  const handleRetry = () => {
+    clearError();
+    if (filter) {
+      fetchCharacters(1, filter);
+    } else {
+      fetchCharacters(1);
     }
-  }, []);
+  };
 
   return (
     <main className="min-h-screen bg-black p-8 text-yellow-400">
@@ -65,9 +78,17 @@ export default function CharactersPage() {
 
         {error && (
           <div className="mb-8 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-center">
-            <div className="font-orbitron text-xl text-red-500">
-              Error: {error}
+            <div className="font-orbitron mb-2 text-xl text-red-500">
+              Something went wrong
             </div>
+            <p className="mb-4 text-gray-300">{error}</p>
+            <button
+              onClick={handleRetry}
+              className="rounded bg-yellow-400 px-4 py-2 font-semibold text-black transition-colors hover:bg-yellow-300"
+              disabled={loading}
+            >
+              {loading ? "Retrying..." : "Try Again"}
+            </button>
           </div>
         )}
 
@@ -76,7 +97,11 @@ export default function CharactersPage() {
             <LoadingSkeleton />
           ) : characters.length === 0 ? (
             <div className="col-span-full text-center">
-              <p className="text-yellow-400/70">No characters found</p>
+              <p className="text-yellow-400/70">
+                {filter
+                  ? `No characters found for "${filter}"`
+                  : "No characters found"}
+              </p>
             </div>
           ) : (
             characters.map((character) => (
@@ -85,7 +110,7 @@ export default function CharactersPage() {
           )}
         </div>
 
-        {characters.length > 0 && (
+        {characters.length > 0 && !filter && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

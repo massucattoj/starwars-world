@@ -16,10 +16,12 @@ interface CharactersState {
   hasNextPage: boolean;
   hasPreviousPage: boolean;
   filter: string;
+  hasAttemptedFetch: boolean;
   setFilter: (filter: string) => void;
   fetchCharacters: (page?: number, searchFilter?: string) => Promise<void>;
   nextPage: () => void;
   previousPage: () => void;
+  clearError: () => void;
 }
 
 export const useCharactersStore = create<CharactersState>((set, get) => ({
@@ -32,21 +34,36 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
   hasNextPage: false,
   hasPreviousPage: false,
   filter: "",
+  hasAttemptedFetch: false,
 
   setFilter: (filter: string) => {
-    set({ filter });
+    set({ filter, hasAttemptedFetch: false }); // Reset attempt flag when filter changes
+  },
+
+  clearError: () => {
+    set({ error: null });
   },
 
   fetchCharacters: async (page = 1, searchFilter?: string) => {
-    console.log("fetchCharacters", page, searchFilter);
     const state = get();
 
     if (state.loading) return;
 
     const filter = searchFilter ?? state.filter;
 
+    // Prevent infinite loops on error - but allow refetch if filter changed or page changed
+    const isSameRequest = page === state.currentPage && filter === state.filter;
+    if (
+      isSameRequest &&
+      state.hasAttemptedFetch &&
+      state.characters.length === 0 &&
+      state.error
+    ) {
+      return;
+    }
+
     try {
-      set({ loading: true, error: null });
+      set({ loading: true, error: null, hasAttemptedFetch: true });
 
       let charactersWithDetails;
       let totalPages;
@@ -83,25 +100,38 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
           previous: prevPage,
         } = response.data;
 
-        charactersWithDetails = await Promise.all(
-          results.map(async (character) => {
-            try {
-              const detailsResponse = await api.get<{
-                result: { properties: CharacterProperties };
-              }>(`/people/${character.uid}`);
-              return {
-                ...character,
-                properties: detailsResponse.data.result.properties,
-              };
-            } catch (error) {
-              console.error(
-                `Failed to fetch details for character ${character.uid}:`,
-                error,
-              );
-              return character;
-            }
-          }),
+        // Fetch character details with better error handling
+        const characterDetailsPromises = results.map(async (character) => {
+          try {
+            const detailsResponse = await api.get<{
+              result: { properties: CharacterProperties };
+            }>(`/people/${character.uid}`);
+            return {
+              ...character,
+              properties: detailsResponse.data.result.properties,
+            };
+          } catch (error) {
+            console.warn(
+              `Failed to fetch details for character ${character.uid}:`,
+              error,
+            );
+            return {
+              ...character,
+              properties: undefined,
+            };
+          }
+        });
+
+        const settledResults = await Promise.allSettled(
+          characterDetailsPromises,
         );
+
+        charactersWithDetails = settledResults
+          .filter(
+            (result): result is PromiseFulfilledResult<any> =>
+              result.status === "fulfilled",
+          )
+          .map((result) => result.value);
 
         totalPages = total_pages;
         totalRecords = total_records;
@@ -111,7 +141,7 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
 
       set({
         characters: charactersWithDetails,
-        currentPage: page, // ✅ Always update this
+        currentPage: page,
         totalPages,
         totalRecords,
         hasNextPage: !!next,
@@ -119,6 +149,7 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
         loading: false,
       });
     } catch (error) {
+      console.error("Failed to fetch characters:", error);
       set({
         error:
           error instanceof Error ? error.message : "Failed to fetch characters",
@@ -128,15 +159,15 @@ export const useCharactersStore = create<CharactersState>((set, get) => ({
   },
 
   nextPage: () => {
-    const { currentPage, totalPages, filter } = get();
-    if (currentPage < totalPages) {
+    const { currentPage, totalPages, filter, loading } = get();
+    if (!loading && currentPage < totalPages) {
       get().fetchCharacters(currentPage + 1, filter);
     }
   },
 
   previousPage: () => {
-    const { currentPage, filter } = get();
-    if (currentPage > 1) {
+    const { currentPage, filter, loading } = get();
+    if (!loading && currentPage > 1) {
       get().fetchCharacters(currentPage - 1, filter);
     }
   },

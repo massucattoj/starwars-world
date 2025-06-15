@@ -6,25 +6,39 @@ interface FilmsState {
   films: Movie[];
   loading: boolean;
   error: string | null;
+  hasAttemptedFetch: boolean;
   fetchFilms: () => Promise<void>;
+  clearError: () => void;
 }
 
-export const useMoviesStore = create<FilmsState>((set) => ({
+export const useMoviesStore = create<FilmsState>((set, get) => ({
   films: [],
   loading: false,
   error: null,
+  hasAttemptedFetch: false,
+
+  clearError: () => {
+    set({ error: null });
+  },
+
   fetchFilms: async () => {
-    // Check if movies already exist
-    const state = useMoviesStore.getState();
-    if (state.films.length > 0) return;
+    const { films, loading, hasAttemptedFetch } = get();
+
+    // Prevent multiple simultaneous requests or refetching if already attempted and failed
+    if (
+      loading ||
+      films.length > 0 ||
+      (hasAttemptedFetch && films.length === 0)
+    )
+      return;
 
     try {
-      set({ loading: true, error: null });
-      const response = await api.get("/films");
+      set({ loading: true, error: null, hasAttemptedFetch: true });
+
+      const response = await api.get("/filmss");
       const films = response.data.result;
 
-      // Fetch posters for each film
-      const filmsWithPosters = await Promise.all(
+      const filmsWithPosters = await Promise.allSettled(
         films.map(async (film: Movie) => {
           try {
             const omdbResponse = await omdbApi.get("", {
@@ -35,10 +49,13 @@ export const useMoviesStore = create<FilmsState>((set) => ({
             });
             return {
               ...film,
-              poster: omdbResponse.data.Poster,
+              poster:
+                omdbResponse.data.Poster !== "N/A"
+                  ? omdbResponse.data.Poster
+                  : null,
             };
           } catch (error) {
-            console.error(
+            console.warn(
               `Failed to fetch poster for ${film.properties.title}:`,
               error,
             );
@@ -50,7 +67,15 @@ export const useMoviesStore = create<FilmsState>((set) => ({
         }),
       );
 
-      set({ films: filmsWithPosters, loading: false });
+      // Extract successful results
+      const successfulFilms = filmsWithPosters
+        .filter(
+          (result): result is PromiseFulfilledResult<Movie> =>
+            result.status === "fulfilled",
+        )
+        .map((result) => result.value);
+
+      set({ films: successfulFilms, loading: false });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to fetch films",

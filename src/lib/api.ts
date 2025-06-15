@@ -21,8 +21,4 @@ export const omdbApi = axios.create({
 export const endpoints = {
   films: "/films",
   people: "/people",
-  planets: "/planets",
-  species: "/species",
-  starships: "/starships",
-  vehicles: "/vehicles",
 } as const;
