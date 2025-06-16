@@ -35,7 +35,7 @@ export const useMoviesStore = create<FilmsState>((set, get) => ({
     try {
       set({ loading: true, error: null, hasAttemptedFetch: true });
 
-      const response = await api.get("/filmss");
+      const response = await api.get("/films");
       const films = response.data.result;
 
       const filmsWithPosters = await Promise.allSettled(
