@@ -8,6 +8,8 @@ A modern, interactive web application that brings the Star Wars universe to your
 
 If more time or increase the complexity a better approach will be add a React Query to that project, or replace the idea for a Redux and RTL Query libraries approach.
 
+- [ ] Integration with some AI tool to generate quotes from Star Wars universe or curiosities
+- [ ] Ability to choose in what order the user want to see the movies, chronological order or release date
 - [ ] Planets and starships exploration
 - [ ] Advanced search and filtering
 - [ ] Character relationship mapping
