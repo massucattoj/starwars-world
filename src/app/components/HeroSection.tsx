@@ -1,4 +1,5 @@
 import Image from "next/image";
+
 import heroStarWars from "../assets/hero_star_wars.png";
 
 const HeroSection = () => {

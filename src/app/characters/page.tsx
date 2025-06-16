@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import { useCharactersStore } from "@/store/useCharactersStore";
+
 import { CharacterCard } from "./components/CharacterCard";
 import { LoadingSkeleton } from "./components/LoadingCharactersSkeleton";
-import { SearchBar } from "./components/SearchBar";
 import { Pagination } from "./components/Pagination";
+import { SearchBar } from "./components/SearchBar";
 
 export default function CharactersPage() {
   const {
@@ -30,8 +32,8 @@ export default function CharactersPage() {
     setSearchTerm(value);
   }, []);
 
+  // Initial load
   useEffect(() => {
-    // Initial load - only if we haven't attempted and no characters
     if (
       characters.length === 0 &&
       !filter &&
@@ -42,19 +44,22 @@ export default function CharactersPage() {
       fetchCharacters(1);
       return;
     }
+  }, [characters.length, hasAttemptedFetch, loading]);
 
+  // Handle search term changes
+  useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchTerm.length >= 2) {
         setFilter(searchTerm);
         fetchCharacters(1, searchTerm);
-      } else if (searchTerm === "" && filter !== "") {
+      } else if (searchTerm === "") {
         setFilter("");
         fetchCharacters(1, "");
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, filter, characters.length, hasAttemptedFetch, loading]);
+  }, [searchTerm]); // Only depend on searchTerm
 
   const handleRetry = () => {
     clearError();

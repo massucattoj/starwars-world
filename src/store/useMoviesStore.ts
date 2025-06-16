@@ -1,6 +1,7 @@
+import { create } from "zustand";
+
 import { api, omdbApi } from "@/lib/api";
 import { Movie } from "@/types/movies";
-import { create } from "zustand";
 
 interface FilmsState {
   films: Movie[];

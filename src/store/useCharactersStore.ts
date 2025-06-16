@@ -1,10 +1,11 @@
+import { create } from "zustand";
+
 import { api } from "@/lib/api";
 import {
   Character,
   CharacterProperties,
   CharactersResponse,
 } from "@/types/characters";
-import { create } from "zustand";
 
 interface CharactersState {
   characters: (Character & { properties?: CharacterProperties })[];

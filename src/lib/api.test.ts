@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // Mock axios to avoid conflicts with global mocks
 vi.mock("axios", () => ({
@@ -13,7 +13,7 @@ vi.mock("axios", () => ({
   },
 }));
 
-import { api, omdbApi, endpoints } from "./api";
+import { api, endpoints,omdbApi } from "./api";
 
 describe("API Configuration", () => {
   it("should have correct base URL for Star Wars API", () => {

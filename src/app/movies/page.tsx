@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { useMoviesStore } from "@/store/useMoviesStore";
-import MovieCard from "./components/MovieCard";
+
 import MovieCardSkeleton from "./components/LoadingMoviewSkeleton";
+import MovieCard from "./components/MovieCard";
 
 export default function MoviesPage() {
   const { films, loading, error, fetchFilms, hasAttemptedFetch, clearError } =
