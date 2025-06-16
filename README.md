@@ -103,6 +103,10 @@ pnpm test:coverage
 - **SWAPI (Star Wars API)**: Primary data source for movies and characters
 - **OMDB API**: Enhanced movie data including posters and additional metadata
 
+## 🚀 Deployment
+
+This application is deployed on [Vercel](https://vercel.com/), taking advantage of their seamless integration with Next.js for optimal performance and automatic deployments from the main branch.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
