@@ -16,6 +16,8 @@ If more time or increase the complexity a better approach will be add a React Qu
 - [ ] Movie timeline visualization
 - [ ] Favorites system
 - [ ] Dark/Light theme toggle
+- [ ] Adding some SEO
+- [ ] Using shadcn/ui for increase the versatility
 
 ## ✨ Features
 
